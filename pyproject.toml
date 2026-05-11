@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "napalm-device-types"
+version = "0.1.0"
+description = "Abstract device-type base classes for NAPALM drivers"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Christian Manivong", email = "christian@manivong.de" },
+]
+keywords = [
+    "napalm",
+    "network",
+    "automation",
+    "driver",
+    "access-point",
+    "switch",
+    "firewall",
+    "hypervisor",
+    "storage",
+    "nas",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Networking",
+    "Topic :: System :: Systems Administration",
+    "Typing :: Typed",
+]
+dependencies = [
+    "napalm>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/chrismanivong/napalm-device-types"
+Repository = "https://github.com/chrismanivong/napalm-device-types"
+Issues = "https://github.com/chrismanivong/napalm-device-types/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "mypy",
+    "build",
+    "twine",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["napalm_device_types*"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+ignore_missing_imports = true
