@@ -150,6 +150,53 @@ class Dot1XConfigDict(TypedDict):
 # ---------------------------------------------------------------------------
 
 
+class InterfaceConfigDict(TypedDict, total=False):
+    """Settable configuration for a single switch interface.
+
+    All fields are optional – only the fields present in the dict are applied;
+    omitted fields are left unchanged on the device.
+
+    * description (str) – human-readable port label
+    * enabled (bool) – administrative state (``True`` = no shutdown)
+    * speed (int) – link speed in Mbps; ``0`` = auto-negotiate
+    * duplex (str) – ``"full"``, ``"half"``, or ``"auto"``
+    * mtu (int) – maximum transmission unit in bytes
+    * mode (str) – port mode: ``"access"``, ``"trunk"``, or ``"routed"``
+    * access_vlan (int) – untagged VLAN ID; effective when *mode* is ``"access"``
+    * voice_vlan (int) – voice VLAN ID (``0`` = disabled)
+    * trunk_vlans (list of int) – tagged VLAN IDs allowed on trunk;
+      empty list means *all* VLANs; effective when *mode* is ``"trunk"``
+    * native_vlan (int) – native (untagged) VLAN on a trunk port
+    """
+
+    description: str
+    enabled: bool
+    speed: int
+    duplex: str
+    mtu: int
+    mode: str
+    access_vlan: int
+    voice_vlan: int
+    trunk_vlans: List[int]
+    native_vlan: int
+
+
+class VlanConfigDict(TypedDict, total=False):
+    """Settable configuration for a single VLAN.
+
+    All fields are optional – only those present are applied.
+
+    * name (str) – human-readable VLAN name
+    * active (bool) – whether the VLAN is active (``True``) or suspended (``False``)
+    * interfaces (list of str) – access-port interface names that should be
+      assigned to this VLAN (replaces the current membership)
+    """
+
+    name: str
+    active: bool
+    interfaces: List[str]
+
+
 class STPInterfaceDict(TypedDict):
     role: str
     state: str

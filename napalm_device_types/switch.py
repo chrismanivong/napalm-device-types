@@ -14,10 +14,12 @@ from typing import Dict
 from napalm.base import NetworkDriver
 from napalm_device_types.models import (
     Dot1XPortDict,
+    InterfaceConfigDict,
     MACACLDict,
     PoESummaryDict,
     PortChannelDict,
     SpanningTreeDict,
+    VlanConfigDict,
 )
 
 
@@ -256,6 +258,110 @@ class SwitchDriver(NetworkDriver):
                     },
                 },
             }
+        """
+        raise NotImplementedError
+
+    def set_vlan(self, vlan_id: int, config: VlanConfigDict) -> None:
+        """
+        Creates or updates a VLAN on the switch.
+
+        If the VLAN does not yet exist it is created first.  Only the keys
+        present in *config* are applied; omitted keys leave the existing VLAN
+        configuration untouched.
+
+        :param vlan_id: VLAN ID (1–4094).
+        :param config: A (partial) :class:`~napalm_device_types.models.VlanConfigDict`
+            containing the fields to set.  Supported keys:
+
+            * ``name`` (str) – human-readable VLAN name
+            * ``active`` (bool) – ``True`` = active, ``False`` = suspended
+            * ``interfaces`` (list of str) – access-port names to assign to
+              this VLAN (replaces the current membership list)
+
+        :raises NotImplementedError: If the driver does not implement this method.
+        :raises ValueError: If *vlan_id* is out of range or a field value is invalid.
+
+        Example – create VLAN 10 with a name::
+
+            driver.set_vlan(10, {"name": "Workstations", "active": True})
+
+        Example – assign ports to an existing VLAN::
+
+            driver.set_vlan(
+                10,
+                {"interfaces": ["GigabitEthernet0/1", "GigabitEthernet0/2"]},
+            )
+        """
+        raise NotImplementedError
+
+    def delete_vlan(self, vlan_id: int) -> None:
+        """
+        Removes a VLAN from the switch.
+
+        All ports that were assigned to this VLAN as their access VLAN are
+        moved to the default VLAN (1) by the driver before deletion.  Trunk
+        ports that carry this VLAN will have it removed from their allowed
+        VLAN list.
+
+        :param vlan_id: VLAN ID (1–4094) to delete.
+        :raises NotImplementedError: If the driver does not implement this method.
+        :raises ValueError: If *vlan_id* is out of range or the VLAN does not
+            exist on the device.
+
+        Example::
+
+            driver.delete_vlan(10)
+        """
+        raise NotImplementedError
+
+    def set_interface(self, interface: str, config: InterfaceConfigDict) -> None:
+        """
+        Applies configuration to a single switch interface.
+
+        Only the keys present in *config* are changed; omitted keys leave the
+        current device configuration untouched.
+
+        :param interface: Interface name (e.g. ``"GigabitEthernet0/1"``).
+        :param config: A (partial) :class:`~napalm_device_types.models.InterfaceConfigDict`
+            containing the fields to update.  Supported keys:
+
+            * ``description`` (str) – human-readable port label
+            * ``enabled`` (bool) – administrative state
+            * ``speed`` (int) – link speed in Mbps; ``0`` = auto-negotiate
+            * ``duplex`` (str) – ``"full"``, ``"half"``, or ``"auto"``
+            * ``mtu`` (int) – maximum transmission unit in bytes
+            * ``mode`` (str) – ``"access"``, ``"trunk"``, or ``"routed"``
+            * ``access_vlan`` (int) – untagged VLAN; relevant when mode is ``"access"``
+            * ``voice_vlan`` (int) – voice VLAN ID (``0`` = disabled)
+            * ``trunk_vlans`` (list of int) – tagged VLANs; empty = allow all
+            * ``native_vlan`` (int) – native VLAN on trunk ports
+
+        :raises NotImplementedError: If the driver does not implement this method.
+        :raises ValueError: If *interface* does not exist or an invalid value is
+            supplied for a configuration field.
+
+        Example – convert port to access VLAN 10 and add a description::
+
+            driver.set_interface(
+                "GigabitEthernet0/1",
+                {
+                    "description": "Workstation port",
+                    "enabled": True,
+                    "mode": "access",
+                    "access_vlan": 10,
+                },
+            )
+
+        Example – configure a trunk port::
+
+            driver.set_interface(
+                "GigabitEthernet0/2",
+                {
+                    "mode": "trunk",
+                    "trunk_vlans": [10, 20, 30],
+                    "native_vlan": 1,
+                },
+            )
         """
         raise NotImplementedError
 
