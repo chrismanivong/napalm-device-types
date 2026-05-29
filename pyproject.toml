@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "napalm-device-types"
-version = "0.1.0"
+version = "0.2.0"
 description = "Abstract device-type base classes for NAPALM drivers"
 readme = "README.md"
 requires-python = ">=3.9"

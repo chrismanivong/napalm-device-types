@@ -20,8 +20,10 @@ from napalm_device_types.models import (
     MeshPeerDict,
     PackageDict,
     RadioStatusDict,
+    ServiceDict,
     SSIDBridgeDict,
     SSIDDict,
+    UpdateDict,
     WirelessClientDict,
     WirelessConfigDict,
 )
@@ -34,6 +36,23 @@ class AccessPointDriver(NetworkDriver):
     Inherits all standard NAPALM NetworkDriver methods and adds
     access-point-specific operations that concrete drivers must implement.
     """
+
+    # Interfaces that carry no operational meaning on an access point and
+    # should be excluded from get_interfaces() / get_facts() interface_list.
+    _EXCLUDED_INTERFACES: frozenset = frozenset({"lo"})
+
+    # Interface name *prefixes* to exclude (e.g. Linux phy* are raw radio
+    # devices and have no IP/Ethernet significance at the AP level).
+    _EXCLUDED_INTERFACE_PREFIXES: tuple = ("phy",)
+
+    def _filter_interfaces(self, interfaces: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove loopback and radio-device (phy*) interfaces from an interface dict."""
+        return {
+            name: data
+            for name, data in interfaces.items()
+            if name not in self._EXCLUDED_INTERFACES
+            and not name.startswith(self._EXCLUDED_INTERFACE_PREFIXES)
+        }
 
     def get_wireless_clients(self) -> List[WirelessClientDict]:
         """
@@ -495,6 +514,67 @@ class AccessPointDriver(NetworkDriver):
                     "heartbeat": 60,
                 },
             }
+        """
+        raise NotImplementedError
+
+    def get_services(self) -> List[ServiceDict]:
+        """
+        Returns the list of system services known to the device's init system.
+
+        Each entry contains:
+
+        * name (string)    - service name as registered with the init system
+        * running (bool)   - ``True`` if the service process is currently running
+        * enabled (bool)   - ``True`` if the service starts automatically at boot
+        * pid (int)        - process ID of the main service process; 0 if not running
+
+        Example::
+
+            [
+                {"name": "lldpd",   "running": True,  "enabled": True,  "pid": 2341},
+                {"name": "sshd",    "running": True,  "enabled": True,  "pid": 1198},
+                {"name": "cron",    "running": False, "enabled": False, "pid": 0},
+            ]
+        """
+        raise NotImplementedError
+
+    def manage_service(self, name: str, action: str) -> Dict[str, Any]:
+        """
+        Execute a lifecycle action on a named service.
+
+        :param name: Service name as returned by :meth:`get_services`.
+        :param action: One of ``start``, ``stop``, ``restart``, ``enable``, ``disable``.
+        :returns: ``{"success": bool, "output": str}``
+        :raises ValueError: If ``name`` or ``action`` is invalid.
+        :raises NotImplementedError: If the driver does not support service management.
+        """
+        raise NotImplementedError
+
+    def get_available_updates(self) -> List[UpdateDict]:
+        """
+        Returns the list of installed packages that have a newer version available.
+
+        Uses the local package manager cache — does not run ``opkg update`` / ``apk update``.
+
+        :returns: List of :class:`~napalm_device_types.models.UpdateDict`.
+        :raises NotImplementedError: If the driver does not support update listing.
+
+        Example::
+
+            [
+                {"name": "busybox",  "current_version": "1.36.1-1", "new_version": "1.37.0-1"},
+                {"name": "dropbear", "current_version": "2022.83-2", "new_version": "2024.86-1"},
+            ]
+        """
+        raise NotImplementedError
+
+    def apply_updates(self, packages: List[str]) -> Dict[str, Any]:
+        """
+        Upgrade one or more packages to their newest available version.
+
+        :param packages: List of package names to upgrade.
+        :returns: ``{"success": bool, "output": str}``
+        :raises NotImplementedError: If the driver does not support package upgrades.
         """
         raise NotImplementedError
 

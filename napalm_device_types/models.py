@@ -6,7 +6,7 @@ abstract device-type driver classes in this package.
 """
 
 from typing import Dict, List, Optional
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +50,23 @@ class PackageDict(TypedDict):
     source: str
 
 
+class ServiceDict(TypedDict):
+    """A system service managed by the device's init system (e.g. procd on OpenWrt)."""
+
+    name: str
+    running: bool
+    enabled: bool
+    pid: int  # 0 if not running
+
+
+class UpdateDict(TypedDict):
+    """A software package that has a newer version available in the package repository."""
+
+    name: str
+    current_version: str
+    new_version: str
+
+
 # ---------------------------------------------------------------------------
 # Access Point
 # ---------------------------------------------------------------------------
@@ -64,6 +81,10 @@ class WirelessClientDict(TypedDict):
     tx_rate: float
     rx_rate: float
     uptime: int
+    # Optional fields populated by DHCP cross-reference (e.g. from firewall)
+    ip: NotRequired[str]
+    hostname: NotRequired[str]
+    lease_end: NotRequired[int]  # Unix timestamp when DHCP lease expires
 
 
 class SSIDDict(TypedDict):
@@ -289,6 +310,7 @@ class VPNTunnelDict(TypedDict):
     uptime: int
     bytes_in: int
     bytes_out: int
+    description: NotRequired[str]  # human-readable tunnel description / name
 
 
 # ---------------------------------------------------------------------------
